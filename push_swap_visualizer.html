@@ -1,0 +1,1638 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Push_swap Visualizer</title>
+    <style>
+        /* === RESET & BASE === */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            height: 100%;
+            font-family: 'Segoe UI', Roboto, system-ui, -apple-system, sans-serif;
+            background: #121212;
+            color: #e0e0e0;
+            overflow: hidden;
+        }
+
+        /* === SCROLLBAR === */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #1e1e1e;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #444;
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+
+        /* === LAYOUT === */
+        .app {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            height: 100dvh;
+            background: #121212;
+            padding: 8px 16px 8px 16px;
+            gap: 0px;
+            min-height: 0;
+        }
+
+        /* === HEADER === */
+        .header {
+            flex-shrink: 0;
+            padding: 4px 0 2px 0;
+        }
+        .header h1 {
+            font-size: 1.5rem;
+            font-weight: 500;
+            letter-spacing: 0.3px;
+            color: #e8e8e8;
+        }
+        .header h1 span {
+            color: #5b9bd5;
+        }
+        .header .sub {
+            font-size: 0.8rem;
+            color: #9a9a9a;
+            font-weight: 300;
+            margin-top: -2px;
+            letter-spacing: 0.2px;
+        }
+
+        /* === INPUT AREA === */
+        .input-area {
+            flex-shrink: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            padding: 4px 0 4px 0;
+        }
+
+        .input-row {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex-wrap: nowrap;
+        }
+        @media (min-width: 901px)  
+        {
+            .generate-row {
+                position: absolute;
+                top: 15px;
+                right: 15px;
+            }
+        }
+
+        .input-row .field {
+            display: flex;
+            align-items: center;
+            position: relative;
+        }
+
+        .input-row .field input {
+            background: #1e1e1e;
+            border: 1px solid #333;
+            color: #e0e0e0;
+            padding: 4px 6px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-family: inherit;
+            outline: none;
+            transition: border-color 0.2s;
+            width: 52px;
+            text-align: center;
+            height: 28px;
+        }
+        .input-row .field input:focus {
+            border-color: #5b9bd5;
+        }
+        .input-row .field input::placeholder {
+            color: #666;
+            font-size: 0.65rem;
+        }
+        .input-row .field input.wide {
+            width: 70px;
+        }
+        .input-row .field input.num-wide {
+            width: 52px;
+        }
+        .input-row .field input.di-wide {
+            width: 54px;
+            padding-right: 18px;
+        }
+        .input-row .field .suffix {
+            position: absolute;
+            right: 6px;
+            color: #777;
+            font-size: 0.7rem;
+            pointer-events: none;
+            user-select: none;
+        }
+        .input-row .field .hyphen {
+            color: #666;
+            font-size: 0.9rem;
+            padding: 0 2px;
+            user-select: none;
+        }
+        .input-row .tooltip-wrap {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+        .input-row .tooltip-wrap .tooltip-text {
+            visibility: hidden;
+            opacity: 0;
+            position: absolute;
+            top: calc(100% + 6px);
+            left: 50%;
+            transform: translateX(-50%);
+            background: #2a2a2a;
+            color: #ddd;
+            padding: 3px 10px;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            white-space: nowrap;
+            pointer-events: none;
+            transition: opacity 0.2s, visibility 0.2s;
+            border: 1px solid #444;
+            z-index: 10;
+        }
+        .input-row .tooltip-wrap:hover .tooltip-text {
+            visibility: visible;
+            opacity: 1;
+        }
+
+        .input-row .btn-generate {
+            background: #2a2a2a;
+            border: 1px solid #444;
+            color: #e0e0e0;
+            padding: 4px 14px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            height: 28px;
+            transition: background 0.2s, border-color 0.2s;
+            font-family: inherit;
+            white-space: nowrap;
+        }
+        .input-row .btn-generate:hover {
+            background: #333;
+            border-color: #5b9bd5;
+        }
+        .input-row .btn-generate:active {
+            background: #3a3a3a;
+        }
+        .input-row .btn-generate .dice {
+            font-size: 1.1rem;
+            line-height: 1;
+        }
+
+        .input-row .btn-generate.shake {
+            animation: shake 0.4s ease;
+        }
+
+        @keyframes shake {
+            0%,
+            100% {
+                transform: translateX(0);
+            }
+            20% {
+                transform: translateX(-6px);
+            }
+            40% {
+                transform: translateX(6px);
+            }
+            60% {
+                transform: translateX(-4px);
+            }
+            80% {
+                transform: translateX(4px);
+            }
+        }
+
+        .input-row .numbers-textarea-wrap {
+            flex: 1;
+            min-width: 0;
+            margin-top: 2px;
+        }
+        .input-row .numbers-textarea-wrap textarea {
+            width: 100%;
+            height: 36px;
+            background: #1a1a1a;
+            border: 1px solid #333;
+            color: #d0d0d0;
+            border-radius: 4px;
+            padding: 4px 8px;
+            font-size: 0.75rem;
+            font-family: 'Consolas', 'Courier New', monospace;
+            resize: none;
+            outline: none;
+            transition: border-color 0.2s;
+            line-height: 1.4;
+        }
+        .input-row .numbers-textarea-wrap textarea:focus {
+            border-color: #5b9bd5;
+        }
+        .input-row .numbers-textarea-wrap textarea::placeholder {
+            color: #555;
+            font-size: 0.7rem;
+        }
+
+        /* === MAIN 3-COLUMN LAYOUT === */
+        .main-area {
+            display: flex;
+            flex: 1;
+            gap: 10px;
+            min-height: 0;
+            padding-bottom: 2px;
+        }
+
+        /* --- LEFT COLUMN: Operations --- */
+        .col-ops {
+            flex: 0 0 180px;
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+            padding-right: 8px;
+        }
+        .col-ops .ops-label {
+            font-size: 0.7rem;
+            color: #888;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            padding-bottom: 2px;
+            flex-shrink: 0;
+        }
+        .col-ops .ops-textarea-wrap {
+            flex: 1;
+            min-height: 0;
+        }
+        .col-ops .ops-textarea-wrap textarea {
+            width: 100%;
+            height: 100%;
+            background: #1a1a1a;
+            border: 1px solid #333;
+            color: #c0c0c0;
+            border-radius: 4px;
+            padding: 4px 6px;
+            font-size: 0.6rem;
+            font-family: 'Consolas', 'Courier New', monospace;
+            resize: none;
+            outline: none;
+            transition: border-color 0.2s;
+            line-height: 1.3;
+        }
+        .col-ops .ops-textarea-wrap textarea:focus {
+            border-color: #5b9bd5;
+        }
+        .col-ops .ops-textarea-wrap textarea::placeholder {
+            color: #444;
+            font-size: 0.6rem;
+        }
+        .col-ops .ops-textarea-wrap textarea:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* --- Media controls with progress bar --- */
+        .media-controls {
+            display: flex;
+            flex-direction: column;
+            padding: 4px 0 2px 0;
+            flex-shrink: 0;
+            margin-top: 4px;
+            gap: 4px;
+        }
+        .media-controls .progress-bar-wrap {
+            width: 100%;
+            height: 5px;
+            background: #2a2a2a;
+            border-radius: 3px;
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+        .media-controls .progress-bar-wrap .progress-fill {
+            height: 100%;
+            width: 0%;
+            background: #5b9bd5;
+            border-radius: 3px;
+            transition: width 0.15s ease;
+        }
+        .media-controls .buttons-row {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+        .media-controls .btn-media {
+            background: transparent;
+            border: none;
+            color: #c0c0c0;
+            font-size: 1.2rem;
+            cursor: pointer;
+            padding: 2px 4px;
+            border-radius: 4px;
+            transition: color 0.2s, background 0.2s, opacity 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: inherit;
+            line-height: 1;
+            width: 28px;
+            height: 28px;
+        }
+        .media-controls .btn-media:hover:not(:disabled) {
+            background: #2a2a2a;
+            color: #fff;
+        }
+        .media-controls .btn-media:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+        .media-controls .btn-media.btn-play {
+            font-size: 1.6rem;
+            width: 36px;
+            height: 36px;
+        }
+        .media-controls .btn-media.btn-play:hover:not(:disabled) {
+            background: #2a2a2a;
+            color: #5b9bd5;
+        }
+        .media-controls .btn-media .icon {
+            line-height: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* --- RIGHT SIDE: Stack A & Stack B --- */
+        .stacks-area {
+            flex: 1;
+            display: flex;
+            gap: 10px;
+            min-height: 0;
+        }
+
+        .stack-col {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+            border: 1px solid #2a2a2a;
+            border-radius: 4px;
+            padding: 4px 6px 4px 6px;
+            background: #161616;
+            transition: border-color 0.3s;
+            overflow: hidden;
+        }
+        .stack-col .stack-label {
+            font-size: 0.7rem;
+            color: #888;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            flex-shrink: 0;
+            padding-bottom: 2px;
+            border-bottom: 1px solid #252525;
+            margin-bottom: 4px;
+        }
+        .stack-col .stack-bars {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            overflow-y: auto;
+            padding: 2px 0;
+            min-height: 0;
+        }
+        .stack-col .stack-bars .bar-wrap {
+            display: flex;
+            align-items: center;
+            min-height: 18px;
+            flex-shrink: 0;
+        }
+        .stack-col .stack-bars .bar {
+            height: 16px;
+            border-radius: 2px;
+            transition: width 0.15s ease, background 0.15s ease, outline 0.1s ease;
+            min-width: 2px;
+            outline: 1px solid transparent;
+            outline-offset: -1px;
+        }
+        .stack-col .stack-bars .bar.highlight {
+            outline: 2px solid #ffffff;
+            outline-offset: -1px;
+            z-index: 2;
+            position: relative;
+        }
+        .stack-col .stack-bars .bar.empty-bar {
+            height: 16px;
+            border: 1px dashed #2a2a2a;
+            border-radius: 2px;
+            min-width: 8px;
+            background: transparent !important;
+        }
+
+        .stack-col.sorted-green {
+            border-color: #2e7d32;
+        }
+        .stack-col.sorted-red {
+            border-color: #c62828;
+            background: #ffd0ca;
+        }
+        .stack-col.sorted-red .stack-col .stack-label{
+            color: #c62828;
+        }
+
+        /* === BAR SIZE ADAPTIVE CLASSES (applied to .stack-bars) === */
+        .stack-bars.size-10 .bar-wrap { min-height: 28px; }
+        .stack-bars.size-10 .bar { height: 26px; }
+        .stack-bars.size-10 .empty-bar { height: 26px; }
+
+        .stack-bars.size-20 .bar-wrap { min-height: 10px; }
+        .stack-bars.size-20 .bar { height: 18px; }
+        .stack-bars.size-20 .empty-bar { height: 18px; }
+
+        .stack-bars.size-50 .bar-wrap { min-height: 12px; }
+        .stack-bars.size-50 .bar { height: 10px; }
+        .stack-bars.size-50 .empty-bar { height: 10px; }
+
+        .stack-bars.size-100 .bar-wrap { min-height: 10px; }
+        .stack-bars.size-100 .bar { height: 8px; }
+        .stack-bars.size-100 .empty-bar { height: 8px; }
+
+        .stack-bars.size-300 .bar-wrap { min-height: 5px; }
+        .stack-bars.size-300 .bar { height: 4px; }
+        .stack-bars.size-300 .empty-bar { height: 4px; }
+
+        .stack-bars.size-300, .stack-bars.size-500, .stack-bars.size-600, .stack-bars.size-more {gap: 0px;}
+        .stack-bars.size-500 .bar-wrap { min-height: 3px; }
+        .stack-bars.size-500 .bar { height: 3px; }
+        .stack-bars.size-500 .empty-bar { height: 3px; }
+
+        .stack-bars.size-600 .bar-wrap { min-height: 2px; }
+        .stack-bars.size-600 .bar { height: 2px; }
+        .stack-bars.size-600 .empty-bar { height: 2px; }
+
+        .stack-bars.size-more .bar-wrap { min-height: 2px; }
+        .stack-bars.size-more .bar { height: 2px; }
+        .stack-bars.size-more .empty-bar { height: 2px; }
+
+        /* === LIGHT MODE OVERRIDES === */
+        @media (prefers-color-scheme: light) {
+            html,
+            body,
+            .app {
+                background: #f5f5f5;
+                color: #222;
+            }
+            .header h1 {
+                color: #1a1a1a;
+            }
+            .header h1 span {
+                color: #1a6fb5;
+            }
+            .header .sub {
+                color: #666;
+            }
+            .input-row .field input {
+                background: #fff;
+                border-color: #ccc;
+                color: #222;
+            }
+            .input-row .field input:focus {
+                border-color: #1a6fb5;
+            }
+            .input-row .field input::placeholder {
+                color: #999;
+            }
+            .input-row .field .suffix {
+                color: #888;
+            }
+            .input-row .field .hyphen {
+                color: #888;
+            }
+            .input-row .btn-generate {
+                background: #e8e8e8;
+                border-color: #ccc;
+                color: #222;
+            }
+            .input-row .btn-generate:hover {
+                background: #d5d5d5;
+                border-color: #1a6fb5;
+            }
+            .input-row .numbers-textarea-wrap textarea {
+                background: #fff;
+                border-color: #ccc;
+                color: #222;
+            }
+            .input-row .numbers-textarea-wrap textarea:focus {
+                border-color: #1a6fb5;
+            }
+            .col-ops .ops-label {
+                color: #777;
+            }
+            .col-ops .ops-textarea-wrap textarea {
+                background: #fff;
+                border-color: #ccc;
+                color: #222;
+            }
+            .col-ops .ops-textarea-wrap textarea:focus {
+                border-color: #1a6fb5;
+            }
+            .col-ops .ops-textarea-wrap textarea::placeholder {
+                color: #999;
+            }
+            .media-controls .progress-bar-wrap {
+                background: #d0d0d0;
+            }
+            .media-controls .progress-bar-wrap .progress-fill {
+                background: #1a6fb5;
+            }
+            .media-controls .btn-media {
+                color: #555;
+            }
+            .media-controls .btn-media:hover:not(:disabled) {
+                background: #e0e0e0;
+                color: #111;
+            }
+            .media-controls .btn-media.btn-play:hover:not(:disabled) {
+                background: #e0e0e0;
+                color: #1a6fb5;
+            }
+            .stack-col {
+                border-color: #d0d0d0;
+                background: #f0f0f0;
+            }
+            .stack-col .stack-label {
+                color: #777;
+                border-bottom-color: #d5d5d5;
+            }
+            .stack-col .stack-bars .bar.highlight {
+                outline-color: #111;
+            }
+            .stack-col .stack-bars .bar.empty-bar {
+                border-color: #ccc;
+            }
+            .stack-col.sorted-green {
+                border-color: #2e7d32;
+            }
+            .stack-col.sorted-red {
+                border-color: #c62828;
+            }
+            .input-row .tooltip-wrap .tooltip-text {
+                background: #e8e8e8;
+                color: #222;
+                border-color: #bbb;
+            }
+            ::-webkit-scrollbar-track {
+                background: #e8e8e8;
+            }
+            ::-webkit-scrollbar-thumb {
+                background: #bbb;
+            }
+            ::-webkit-scrollbar-thumb:hover {
+                background: #aaa;
+            }
+        }
+
+        /* === RESPONSIVE TWEAKS (desktop-first, minimal) === */
+        @media (max-width: 900px) {
+            .col-ops {
+                flex: 0 0 140px;
+            }
+            .input-row .field input {
+                width: 40px;
+                font-size: 0.7rem;
+                padding: 3px 4px;
+            }
+            .input-row .field input.wide {
+                width: 56px;
+            }
+            .input-row .field input.num-wide {
+                width: 40px;
+            }
+            .input-row .field input.di-wide {
+                width: 36px;
+                padding-right: 14px;
+            }
+            .input-row .btn-generate {
+                font-size: 0.7rem;
+                padding: 3px 10px;
+                height: 26px;
+            }
+            .header h1 {
+                font-size: 1.2rem;
+            }
+        }
+
+        @media (max-width: 700px) {
+            .col-ops {
+                flex: 0 0 110px;
+            }
+            .col-ops .ops-textarea-wrap textarea {
+                font-size: 0.5rem;
+            }
+            .input-row {
+                flex-wrap: wrap;
+                gap: 4px;
+            }
+            .input-row .numbers-textarea-wrap {
+                flex-basis: 100%;
+                order: 10;
+            }
+            .input-row .numbers-textarea-wrap textarea {
+                height: 28px;
+            }
+        }
+
+        /* === UTILITY === */
+        .hidden {
+            display: none !important;
+        }
+        .flex-shrink-0 {
+            flex-shrink: 0;
+        }
+        .gap-1 {
+            gap: 4px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="app" id="app">
+        <!-- HEADER -->
+        <header class="header">
+            <h1>🔄 <span>Push_swap</span> visualizer</h1>
+            <div class="sub">Live view your push_swap operations</div>
+        </header>
+
+        <!-- INPUT AREA -->
+        <div class="input-area">
+            <div class="input-row generate-row">
+                <!-- Min -->
+                <div class="tooltip-wrap">
+                    <div class="field">
+                        <input type="text" id="minVal" class="wide" placeholder="Min." value="0" step="1">
+                    </div>
+                    <span class="tooltip-text">Minimum value</span>
+                </div>
+                <span class="hyphen">–</span>
+                <!-- Max -->
+                <div class="tooltip-wrap">
+                    <div class="field">
+                        <input type="text" id="maxVal" class="wide" placeholder="Max." value="999" step="1">
+                    </div>
+                    <span class="tooltip-text">Maximum value</span>
+                </div>
+                <!-- Number -->
+                <div class="tooltip-wrap">
+                    <div class="field">
+                        <input type="text" id="numCount" class="num-wide" placeholder="Numb." value="100" min="1" step="1">
+                    </div>
+                    <span class="tooltip-text">Number of values</span>
+                </div>
+                <!-- Disorder -->
+                <div class="tooltip-wrap">
+                    <div class="field">
+                        <input type="text" id="disorderPct" class="di-wide" placeholder="D.I." value="50" min="0" max="100" step="1">
+                        <span class="suffix">%</span>
+                    </div>
+                    <span class="tooltip-text">Disorder index percentage</span>
+                </div>
+                <!-- Generate button -->
+                <button class="btn-generate" id="generateBtn">
+                    <span class="dice">🎲</span> Generate
+                </button>
+            </div>
+            <div class="input-row" style="margin-top:2px;">
+                <div class="numbers-textarea-wrap">
+                    <textarea id="numbersInput" placeholder="Paste or generate the input numbers (space, comma or newline separated)"></textarea>
+                </div>
+            </div>
+        </div>
+
+        <!-- MAIN 3-COLUMN -->
+        <div class="main-area">
+            <!-- LEFT: Operations -->
+            <div class="col-ops">
+                <div class="ops-label">Operations</div>
+                <div class="ops-textarea-wrap">
+                    <textarea id="opsInput" placeholder="Paste operations here&#10;sa, sb, ss, pa, pb,&#10;ra, rb, rr, rra, rrb, rrr"></textarea>
+                </div>
+                <div class="media-controls">
+                    <!-- Progress bar -->
+                    <div class="progress-bar-wrap">
+                        <div class="progress-fill" id="progressFill"></div>
+                    </div>
+                    <div class="buttons-row">
+                        <button class="btn-media" id="stopBtn" disabled title="Stop / restart">
+                            <span class="icon" id="stopIcon">⏹</span>
+                        </button>
+                        <button class="btn-media" id="rewindBtn" disabled title="Rewind / slow down">
+                            <span class="icon">≪</span> <!--&#x23EA;&#xFE0E;-->
+                        </button>
+                        <button class="btn-media btn-play" id="playBtn" disabled title="Play / pause">
+                            <span class="icon" id="playIcon">▶</span>
+                        </button>
+                        <button class="btn-media" id="forwardBtn" disabled title="Forward / speed up">
+                            <span class="icon">≫</span><!-- &#x23E9;&#xFE0E; -->
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- RIGHT: Stacks -->
+            <div class="stacks-area">
+                <div class="stack-col" id="stackACol">
+                    <div class="stack-label">Stack A</div>
+                    <div class="stack-bars" id="stackABars"></div>
+                </div>
+                <div class="stack-col" id="stackBCol">
+                    <div class="stack-label">Stack B</div>
+                    <div class="stack-bars" id="stackBBars"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        /* ============================================================
+               PUSH_SWAP VISUALIZER — Full client-side logic
+               ============================================================ */
+
+        (function() {
+            'use strict';
+
+            // ---- DOM refs ----
+            const numbersInput = document.getElementById('numbersInput');
+            const opsInput = document.getElementById('opsInput');
+            const minVal = document.getElementById('minVal');
+            const maxVal = document.getElementById('maxVal');
+            const numCount = document.getElementById('numCount');
+            const disorderPct = document.getElementById('disorderPct');
+            const generateBtn = document.getElementById('generateBtn');
+            const playBtn = document.getElementById('playBtn');
+            const stopBtn = document.getElementById('stopBtn');
+            const rewindBtn = document.getElementById('rewindBtn');
+            const forwardBtn = document.getElementById('forwardBtn');
+            const playIcon = document.getElementById('playIcon');
+            const stopIcon = document.getElementById('stopIcon');
+            const progressFill = document.getElementById('progressFill');
+            const stackABars = document.getElementById('stackABars');
+            const stackBBars = document.getElementById('stackBBars');
+            const stackACol = document.getElementById('stackACol');
+            const stackBCol = document.getElementById('stackBCol');
+
+            // ---- State ----
+            const state = {
+                numbers: [], // original numbers (stack A initial)
+                stackA: [], // current stack A
+                stackB: [], // current stack B
+                operations: [], // parsed operations
+                currentStep: 0, // index into operations
+                isPlaying: false,
+                isPaused: false,
+                isFinished: false,
+                speed: 200, // ms per step
+                timerId: null,
+                // For highlighting: which indices in A and B are highlighted
+                highlightA: new Set(),
+                highlightB: new Set(),
+                // Sorted state
+                isSorted: false,
+            };
+
+            const ALL_OPS = new Set(['sa', 'sb', 'ss', 'pa', 'pb', 'ra', 'rb', 'rr', 'rra', 'rrb', 'rrr']);
+
+            // ---- Helpers ----
+            function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
+
+            function isNumeric(v) { return !isNaN(parseFloat(v)) && isFinite(v); }
+
+            function parseNumbers(text) {
+                const tokens = text.split(/[\s,;]+/).filter(s => s.length > 0);
+                const nums = [];
+                for (const t of tokens) {
+                    const n = parseFloat(t);
+                    if (!isNaN(n) && isFinite(n) && Number.isInteger(n)) {
+                        nums.push(n);
+                    }
+                }
+                return nums;
+            }
+
+            function parseOperations(text) {
+                const lines = text.split(/\r?\n/);
+                const ops = [];
+                for (const line of lines) {
+                    const trimmed = line.trim();
+                    if (trimmed.length === 0) continue;
+                    if (trimmed.startsWith('#')) continue;
+                    const parts = trimmed.split(/\s+/);
+                    for (const p of parts) {
+                        if (ALL_OPS.has(p)) ops.push(p);
+                    }
+                }
+                return ops;
+            }
+
+            // ---- Disorder computation ----
+            function computeDisorder(arr) {
+                if (arr.length < 2) return 0;
+                let mistakes = 0;
+                const totalPairs = arr.length * (arr.length - 1) / 2;
+                for (let i = 0; i < arr.length; i++) {
+                    for (let j = i + 1; j < arr.length; j++) {
+                        if (arr[i] > arr[j]) mistakes++;
+                    }
+                }
+                return mistakes / totalPairs;
+            }
+
+            // ---- Generate random numbers with target disorder ----
+            function generateNumbersWithDisorder(minVal, maxVal, count, targetDisorderPct, maxAttempts) {
+                if (count < 1) return [];
+                if (minVal > maxVal) { const t = minVal; minVal = maxVal; maxVal = t; }
+                const range = maxVal - minVal + 1; // total possible distinct values
+                // If we ask for more numbers than available, cap it
+                if (count > range) count = range;
+                const target = clamp(targetDisorderPct / 100, 0, 1);
+                const tolerance = 0.04;
+
+                // Helper: generate a random subset of size k from [minVal, maxVal] without replacement
+                function randomSubset(size, min, max) {
+                    // Use Fisher-Yates on the full range, but stop early to get a random subset
+                    const total = max - min + 1;
+                    if (size >= total) {
+                        // return all numbers in order
+                        const arr = [];
+                        for (let i = min; i <= max; i++) arr.push(i);
+                        return arr;
+                    }
+                    // Build an array of all possible values and shuffle only needed part
+                    const arr = [];
+                    for (let i = min; i <= max; i++) arr.push(i);
+                    // Fisher-Yates partial shuffle to get first 'size' elements
+                    for (let i = 0; i < size; i++) {
+                        const j = i + Math.floor(Math.random() * (total - i));
+                        [arr[i], arr[j]] = [arr[j], arr[i]];
+                    }
+                    return arr.slice(0, size);
+                }
+
+                // Generate a random subset, then attempt to adjust disorder by swapping
+                function generateWithDisorder(target, tolerance, maxAttempts) {
+                    // Get a random subset
+                    let arr = randomSubset(count, minVal, maxVal);
+                    // Sort it (disorder = 0)
+                    arr.sort((a, b) => a - b);
+                    // If target is near 0 or array length < 2, return as is
+                    if (target < 0.05 || arr.length < 2) return arr;
+
+                    // We'll try to increase disorder by random swaps.
+                    // Keep track of best approximation
+                    let bestArr = arr.slice();
+                    let bestDisorder = computeDisorder(arr);
+                    let bestDiff = Math.abs(bestDisorder - target);
+
+                    // Attempt multiple random restarts
+                    for (let attempt = 0; attempt < maxAttempts; attempt++) {
+                        // Start from a fresh sorted copy (or sometimes a different subset)
+                        let current = arr.slice(); // we reuse the sorted array
+                        // Perform random swaps
+                        const numSwaps = Math.floor(arr.length * 1.5); // enough to mix
+                        for (let s = 0; s < numSwaps; s++) {
+                            const i = Math.floor(Math.random() * current.length);
+                            const j = Math.floor(Math.random() * current.length);
+                            if (i !== j) {
+                                [current[i], current[j]] = [current[j], current[i]];
+                            }
+                            // Occasionally check disorder to see if we hit target early
+                            if (s % 10 === 0) {
+                                const d = computeDisorder(current);
+                                if (Math.abs(d - target) <= tolerance) {
+                                    return current;
+                                }
+                                // Keep best
+                                const diff = Math.abs(d - target);
+                                if (diff < bestDiff) {
+                                    bestDiff = diff;
+                                    bestArr = current.slice();
+                                    bestDisorder = d;
+                                }
+                            }
+                        }
+                        // Final check for this attempt
+                        const d = computeDisorder(current);
+                        if (Math.abs(d - target) <= tolerance) {
+                            return current;
+                        }
+                        const diff = Math.abs(d - target);
+                        if (diff < bestDiff) {
+                            bestDiff = diff;
+                            bestArr = current.slice();
+                            bestDisorder = d;
+                        }
+                        // If we have a good match, return early
+                        if (bestDiff <= tolerance) break;
+                    }
+                    return bestArr;
+                }
+
+                // If count is 1 or range is 1, just return the single value
+                if (count === 1 || range === 1) {
+                    const val = minVal + Math.floor(Math.random() * range);
+                    return [val];
+                }
+
+                // Try to generate with target disorder
+                const result = generateWithDisorder(target, tolerance, maxAttempts);
+                // Ensure no duplicates (should already be unique)
+                return result;
+            }
+
+            // ---- Stack operations ----
+            function opSA(a, b) { if (a.length >= 2) { [a[0], a[1]] = [a[1], a[0]]; } }
+
+            function opSB(a, b) { if (b.length >= 2) { [b[0], b[1]] = [b[1], b[0]]; } }
+
+            function opSS(a, b) { opSA(a, b);
+                opSB(a, b); }
+
+            function opPA(a, b) { if (b.length > 0) { a.unshift(b.shift()); } }
+
+            function opPB(a, b) { if (a.length > 0) { b.unshift(a.shift()); } }
+
+            function opRA(a, b) { if (a.length > 1) { a.push(a.shift()); } }
+
+            function opRB(a, b) { if (b.length > 1) { b.push(b.shift()); } }
+
+            function opRR(a, b) { opRA(a, b);
+                opRB(a, b); }
+
+            function opRRA(a, b) { if (a.length > 1) { a.unshift(a.pop()); } }
+
+            function opRRB(a, b) { if (b.length > 1) { b.unshift(b.pop()); } }
+
+            function opRRR(a, b) { opRRA(a, b);
+                opRRB(a, b); }
+
+            const OP_MAP = {
+                sa: opSA,
+                sb: opSB,
+                ss: opSS,
+                pa: opPA,
+                pb: opPB,
+                ra: opRA,
+                rb: opRB,
+                rr: opRR,
+                rra: opRRA,
+                rrb: opRRB,
+                rrr: opRRR,
+            };
+
+            // ---- Apply a single operation and return affected indices ----
+            function applyOp(op, a, b) {
+                const fn = OP_MAP[op];
+                if (!fn) return { aIdx: [], bIdx: [] };
+                const aBefore = a.slice();
+                const bBefore = b.slice();
+                fn(a, b);
+                const aIdx = [];
+                const bIdx = [];
+                if (op === 'sa' || op === 'ss') {
+                    if (aBefore.length >= 2) { aIdx.push(0, 1); }
+                }
+                if (op === 'sb' || op === 'ss') {
+                    if (bBefore.length >= 2) { bIdx.push(0, 1); }
+                }
+                if (op === 'pa') {
+                    if (bBefore.length > 0) { aIdx.push(0);
+                        bIdx.push(0); }
+                }
+                if (op === 'pb') {
+                    if (aBefore.length > 0) { bIdx.push(0);
+                        aIdx.push(0); }
+                }
+                if (op === 'ra' || op === 'rr') {
+                    if (aBefore.length > 1) { aIdx.push(0); }
+                }
+                if (op === 'rb' || op === 'rr') {
+                    if (bBefore.length > 1) { bIdx.push(0); }
+                }
+                if (op === 'rra' || op === 'rrr') {
+                    if (aBefore.length > 1) { aIdx.push(aBefore.length - 1); }
+                }
+                if (op === 'rrb' || op === 'rrr') {
+                    if (bBefore.length > 1) { bIdx.push(bBefore.length - 1); }
+                }
+                if (aBefore.length > 0 && a.length > 0 && aBefore[0] !== a[0]) {
+                    if (!aIdx.includes(0)) aIdx.push(0);
+                }
+                if (bBefore.length > 0 && b.length > 0 && bBefore[0] !== b[0]) {
+                    if (!bIdx.includes(0)) bIdx.push(0);
+                }
+                if (op === 'pa' && a.length > 0) {
+                    if (!aIdx.includes(0)) aIdx.push(0);
+                }
+                if (op === 'pb' && b.length > 0) {
+                    if (!bIdx.includes(0)) bIdx.push(0);
+                }
+                return { aIdx: [...new Set(aIdx)], bIdx: [...new Set(bIdx)] };
+            }
+
+            // ---- Check if stack is sorted ascending (top to bottom) ----
+            function isSortedAsc(arr) {
+                for (let i = 0; i < arr.length - 1; i++) {
+                    if (arr[i] > arr[i + 1]) return false;
+                }
+                return true;
+            }
+
+            // ---- Update progress bar ----
+            function updateProgress() {
+                const total = state.operations.length;
+                const current = state.currentStep;
+                const pct = total === 0 ? 0 : (current / total) * 100;
+                progressFill.style.width = Math.min(pct, 100) + '%';
+            }
+
+            // ---- Render stacks ----
+            function renderStacks(highlightA, highlightB) {
+                const a = state.stackA;
+                const b = state.stackB;
+                const allVals = [...a, ...b];
+                if (allVals.length === 0) {
+                    renderBars(stackABars, a, [], 0, 0);
+                    renderBars(stackBBars, b, [], 0, 0);
+                    updateProgress();
+                    return;
+                }
+                const minVal = Math.min(...allVals);
+                const maxVal = Math.max(...allVals);
+                const range = maxVal - minVal || 1;
+
+                renderBars(stackABars, a, highlightA || [], minVal, maxVal, range);
+                renderBars(stackBBars, b, highlightB || [], minVal, maxVal, range);
+                updateProgress();
+            }
+
+            function renderBars(container, arr, highlightIndices, minVal, maxVal, range) {
+                container.innerHTML = '';
+                if (arr.length === 0) {
+                    const wrap = document.createElement('div');
+                    wrap.className = 'bar-wrap';
+                    const bar = document.createElement('div');
+                    bar.className = 'bar empty-bar';
+                    bar.style.width = '100%';
+                    wrap.appendChild(bar);
+                    container.appendChild(wrap);
+                    return;
+                }
+                const hlSet = new Set(highlightIndices);
+                for (let i = 0; i < arr.length; i++) {
+                    const val = arr[i];
+                    const frac = (val - minVal) / range;
+                    const pct = 5 + frac * 90;
+                    const wrap = document.createElement('div');
+                    wrap.className = 'bar-wrap';
+                    const bar = document.createElement('div');
+                    bar.className = 'bar';
+                    bar.style.width = pct + '%';
+                    const hue = 210;
+                    const lightness = 85 - frac * 50;
+                    const saturation = 70 + frac * 20;
+                    bar.style.background = `hsl(${hue}, ${saturation}%, ${lightness}%)`;
+                    if (hlSet.has(i)) {
+                        bar.classList.add('highlight');
+                    }
+                    wrap.appendChild(bar);
+                    container.appendChild(wrap);
+                }
+            }
+
+            // ---- Adaptive bar sizing based on number of elements ----
+            function updateBarSizeClass() {
+                const total = Math.max(state.stackA.length, state.stackB.length);
+                let cls = '';
+                if (total < 10) cls = 'size-10';
+                else if (total < 20) cls = 'size-20';
+                else if (total < 50) cls = 'size-50';
+                else if (total < 100) cls = 'size-100';
+                else if (total < 300) cls = 'size-300';
+                else if (total < 500) cls = 'size-500';
+                else if (total < 600) cls = 'size-600';
+                else cls = 'size-more';
+
+                // Apply to both stack-bars containers
+                stackABars.className = 'stack-bars ' + cls;
+                stackBBars.className = 'stack-bars ' + cls;
+            }
+
+            // ---- Update UI state (buttons, disabled, etc) ----
+            function updateUIState() {
+                const hasOps = state.operations.length > 0;
+                const hasNumbers = state.numbers.length > 0;
+                const isIdle = !state.isPlaying && !state.isPaused && !state.isFinished;
+                const isPaused = state.isPaused;
+                const isFinished = state.isFinished;
+                const isPlaying = state.isPlaying;
+
+                // Play button
+                const canPlay = hasOps && hasNumbers && !isFinished;
+                playBtn.disabled = !canPlay && !isPaused;
+                if (isPlaying) {
+                    playIcon.textContent = '⏸';
+                } else {
+                    playIcon.textContent = '▶';
+                }
+
+                // Stop button: enabled when playing/paused, and also when finished (as restart)
+                const stopEnabled = (isPlaying || isPaused || isFinished) && hasOps && hasNumbers;
+                stopBtn.disabled = !stopEnabled;
+                if (isFinished) {
+                    stopIcon.textContent = '↺'; // restart icon (left arrow-ish)
+                } else {
+                    stopIcon.textContent = '⏹';
+                }
+
+                // Rewind/Forward: enabled when playing/paused, or when finished (but we disable them when finished)
+                const canRewindFwd = (isPlaying || isPaused) && hasOps && hasNumbers;
+                rewindBtn.disabled = !canRewindFwd;
+                forwardBtn.disabled = !canRewindFwd;
+
+                // Textareas
+                const disableTextareas = isPlaying || isPaused || isFinished;
+                numbersInput.disabled = disableTextareas;
+                opsInput.disabled = disableTextareas;
+                minVal.disabled = disableTextareas;
+                maxVal.disabled = disableTextareas;
+                numCount.disabled = disableTextareas;
+                disorderPct.disabled = disableTextareas;
+                generateBtn.disabled = disableTextareas;
+
+                // Stack border for sorted status
+                stackACol.classList.remove('sorted-green', 'sorted-red');
+                stackBCol.classList.remove('sorted-green', 'sorted-red');
+                if (isFinished || (state.currentStep >= state.operations.length && state.operations.length > 0)) {
+                    const sorted = isSortedAsc(state.stackA);
+                    if (sorted && state.stackA.length > 0) {
+                        stackACol.classList.add('sorted-green');
+                    } else if (!sorted && state.stackA.length > 0) {
+                        stackACol.classList.add('sorted-red');
+                    }
+                    if (state.stackB.length === 0 && sorted && state.stackA.length > 0) {
+                        // already green
+                    } else if (state.stackB.length > 0) {
+                        if (!stackACol.classList.contains('sorted-red')) {
+                            stackACol.classList.add('sorted-red');
+                        }
+                    }
+                }
+
+                updateProgress();
+            }
+
+            // ---- Reset stacks to initial numbers ----
+            function resetStacks() {
+                state.stackA = state.numbers.slice();
+                state.stackB = [];
+                state.currentStep = 0;
+                state.isPlaying = false;
+                state.isPaused = false;
+                state.isFinished = false;
+                state.highlightA = new Set();
+                state.highlightB = new Set();
+                if (state.timerId) {
+                    clearTimeout(state.timerId);
+                    state.timerId = null;
+                }
+                renderStacks([], []);
+                updateUIState();
+            }
+
+            // ---- Step forward one operation ----
+            function stepForward() {
+                if (state.currentStep >= state.operations.length) {
+                    state.isFinished = true;
+                    state.isPlaying = false;
+                    state.isPaused = false;
+                    if (state.timerId) {
+                        clearTimeout(state.timerId);
+                        state.timerId = null;
+                    }
+                    renderStacks([], []);
+                    updateUIState();
+                    return false;
+                }
+
+                const op = state.operations[state.currentStep];
+                const result = applyOp(op, state.stackA, state.stackB);
+                state.currentStep++;
+                state.highlightA = new Set(result.aIdx);
+                state.highlightB = new Set(result.bIdx);
+                renderStacks(Array.from(state.highlightA), Array.from(state.highlightB));
+                updateUIState();
+
+                if (state.currentStep >= state.operations.length) {
+                    state.isFinished = true;
+                    state.isPlaying = false;
+                    state.isPaused = false;
+                    if (state.timerId) {
+                        clearTimeout(state.timerId);
+                        state.timerId = null;
+                    }
+                    renderStacks([], []);
+                    updateUIState();
+                    return false;
+                }
+                return true;
+            }
+
+            // ---- Step backward one operation (for rewind when paused) ----
+            function stepBackward() {
+                if (state.currentStep <= 0) return;
+                const a = state.numbers.slice();
+                const b = [];
+                const targetStep = state.currentStep - 1;
+                for (let i = 0; i < targetStep; i++) {
+                    const op = state.operations[i];
+                    const fn = OP_MAP[op];
+                    if (fn) fn(a, b);
+                }
+                state.stackA = a;
+                state.stackB = b;
+                state.currentStep = targetStep;
+                state.highlightA = new Set();
+                state.highlightB = new Set();
+                renderStacks([], []);
+                updateUIState();
+            }
+
+            // ---- Step forward 5 (when paused) ----
+            function stepForwardFive() {
+                const target = Math.min(state.currentStep + 5, state.operations.length);
+                const a = state.numbers.slice();
+                const b = [];
+                for (let i = 0; i < target; i++) {
+                    const op = state.operations[i];
+                    const fn = OP_MAP[op];
+                    if (fn) fn(a, b);
+                }
+                state.stackA = a;
+                state.stackB = b;
+                state.currentStep = target;
+                state.highlightA = new Set();
+                state.highlightB = new Set();
+                renderStacks([], []);
+                updateUIState();
+                if (state.currentStep >= state.operations.length) {
+                    state.isFinished = true;
+                    state.isPlaying = false;
+                    state.isPaused = false;
+                    if (state.timerId) {
+                        clearTimeout(state.timerId);
+                        state.timerId = null;
+                    }
+                    renderStacks([], []);
+                    updateUIState();
+                }
+            }
+
+            // ---- Step backward 5 (when paused) ----
+            function stepBackwardFive() {
+                const target = Math.max(state.currentStep - 5, 0);
+                const a = state.numbers.slice();
+                const b = [];
+                for (let i = 0; i < target; i++) {
+                    const op = state.operations[i];
+                    const fn = OP_MAP[op];
+                    if (fn) fn(a, b);
+                }
+                state.stackA = a;
+                state.stackB = b;
+                state.currentStep = target;
+                state.highlightA = new Set();
+                state.highlightB = new Set();
+                renderStacks([], []);
+                updateUIState();
+            }
+
+            // ---- Play loop ----
+            function playLoop() {
+                if (!state.isPlaying || state.isPaused) return;
+                const cont = stepForward();
+                if (!cont) {
+                    state.isPlaying = false;
+                    state.isFinished = true;
+                    updateUIState();
+                    return;
+                }
+                state.timerId = setTimeout(playLoop, state.speed);
+            }
+
+            // ---- Start playing ----
+            function startPlay() {
+                if (state.isFinished) {
+                    // restart
+                    resetStacks();
+                }
+                if (state.isPaused) {
+                    state.isPaused = false;
+                    state.isPlaying = true;
+                    updateUIState();
+                    state.timerId = setTimeout(playLoop, state.speed);
+                    return;
+                }
+                if (state.isPlaying) return;
+                if (state.operations.length === 0 || state.numbers.length === 0) {
+                    shakeElement(playBtn);
+                    return;
+                }
+                if (state.currentStep >= state.operations.length) {
+                    resetStacks();
+                }
+                state.isPlaying = true;
+                state.isPaused = false;
+                state.isFinished = false;
+                updateUIState();
+                state.timerId = setTimeout(playLoop, state.speed);
+            }
+
+            // ---- Pause ----
+            function pausePlay() {
+                if (!state.isPlaying) return;
+                state.isPaused = true;
+                state.isPlaying = false;
+                if (state.timerId) {
+                    clearTimeout(state.timerId);
+                    state.timerId = null;
+                }
+                updateUIState();
+            }
+
+            // ---- Stop / Restart ----
+            function stopPlay() {
+                if (state.isFinished) {
+                    // Restart: reload numbers
+                    loadNumbers();
+                    return;
+                }
+                if (state.timerId) {
+                    clearTimeout(state.timerId);
+                    state.timerId = null;
+                }
+                state.isPlaying = false;
+                state.isPaused = false;
+                state.isFinished = false;
+                resetStacks();
+                updateUIState();
+            }
+
+            // ---- Toggle play/pause ----
+            function togglePlay() {
+                if (state.isPlaying) {
+                    pausePlay();
+                } else {
+                    startPlay();
+                }
+            }
+
+            // ---- Rewind action ----
+            function rewindAction() {
+                if (state.isPlaying) {
+                    if (state.speed < 50) {
+                        state.speed = 50;
+                    } else {
+                        state.speed = Math.min(state.speed + 100, 1000);
+                    }
+                    return;
+                }
+                if (state.isPaused || state.currentStep > 0) {
+                    stepBackwardFive();
+                }
+            }
+
+            // ---- Forward action ----
+            function forwardAction() {
+                if (state.isPlaying) {
+                    if (state.speed > 50) {
+                        state.speed = Math.max(state.speed - 100, 50);
+                    } else {
+                        state.speed = Math.max(state.speed - 10, 10);
+                    }
+                    return;
+                }
+                if (state.isPaused || state.currentStep < state.operations.length) {
+                    stepForwardFive();
+                }
+            }
+
+            // ---- Shake an element ----
+            function shakeElement(el) {
+                el.classList.remove('shake');
+                void el.offsetWidth;
+                el.classList.add('shake');
+                setTimeout(() => el.classList.remove('shake'), 500);
+            }
+
+            // ---- Load numbers from textarea ----
+            function loadNumbers() {
+                const text = numbersInput.value;
+                const nums = parseNumbers(text);
+                if (nums.length === 0) {
+                    generateAndLoad();
+                    return;
+                }
+                state.numbers = nums;
+                state.stackA = nums.slice();
+                state.stackB = [];
+                state.currentStep = 0;
+                state.isPlaying = false;
+                state.isPaused = false;
+                state.isFinished = false;
+                state.highlightA = new Set();
+                state.highlightB = new Set();
+                if (state.timerId) {
+                    clearTimeout(state.timerId);
+                    state.timerId = null;
+                }
+                state.operations = parseOperations(opsInput.value);
+                renderStacks([], []);
+                updateUIState();
+                updateBarSizeClass();
+                if (state.operations.length === 0) {
+                    playBtn.disabled = true;
+                }
+            }
+
+            // ---- Generate random numbers and load ----
+            function generateAndLoad() {
+                const min = parseInt(minVal.value) || 0;
+                const max = parseInt(maxVal.value) || 999;
+                const count = parseInt(numCount.value) || 100;
+                const disorder = parseInt(disorderPct.value) || 50;
+
+                if (count < 1) {
+                    shakeElement(generateBtn);
+                    return;
+                }
+                if (min > max) {
+                    shakeElement(generateBtn);
+                    return;
+                }
+                if (disorder < 0 || disorder > 100) {
+                    shakeElement(generateBtn);
+                    return;
+                }
+                if (minVal.value.trim() === '' || maxVal.value.trim() === '' ||
+                    numCount.value.trim() === '' || disorderPct.value.trim() === '') {
+                    shakeElement(generateBtn);
+                    return;
+                }
+
+                const nums = generateNumbersWithDisorder(min, max, count, disorder, 200);
+                if (nums.length === 0) {
+                    shakeElement(generateBtn);
+                    return;
+                }
+                numbersInput.value = nums.join(' ');
+                loadNumbers();
+            }
+
+            // ---- Load operations from textarea ----
+            function loadOperations() {
+                state.operations = parseOperations(opsInput.value);
+                if (!state.isPlaying && !state.isPaused) {
+                    state.stackA = state.numbers.slice();
+                    state.stackB = [];
+                    state.currentStep = 0;
+                    state.isFinished = false;
+                    state.highlightA = new Set();
+                    state.highlightB = new Set();
+                    renderStacks([], []);
+                }
+                updateUIState();
+            }
+
+            // ---- Initialize from inputs ----
+            function initFromInputs() {
+                loadNumbers();
+                loadOperations();
+            }
+
+            // ---- Throttled resize for bar sizing ----
+            let resizeTimeout = null;
+
+            function handleResize() {
+                if (resizeTimeout) return;
+                resizeTimeout = setTimeout(() => {
+                    updateBarSizeClass();
+                    resizeTimeout = null;
+                }, 100);
+            }
+
+            // ---- Event bindings ----
+            numbersInput.addEventListener('change', loadNumbers);
+            numbersInput.addEventListener('input', function() {
+                clearTimeout(this._timer);
+                this._timer = setTimeout(() => loadNumbers(), 300);
+            });
+
+            opsInput.addEventListener('change', loadOperations);
+            opsInput.addEventListener('input', function() {
+                clearTimeout(this._timer);
+                this._timer = setTimeout(() => loadOperations(), 300);
+            });
+
+            generateBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                generateAndLoad();
+            });
+
+            playBtn.addEventListener('click', togglePlay);
+            stopBtn.addEventListener('click', stopPlay);
+            rewindBtn.addEventListener('click', rewindAction);
+            forwardBtn.addEventListener('click', forwardAction);
+
+            // Keyboard shortcuts
+            document.addEventListener('keydown', function(e) {
+                if (e.target.tagName === 'TEXTAREA' || e.target.tagName === 'INPUT') return;
+                if (e.key === ' ' || e.key === 'Space') {
+                    e.preventDefault();
+                    togglePlay();
+                } else if (e.key === 'ArrowRight') {
+                    e.preventDefault();
+                    forwardAction();
+                } else if (e.key === 'ArrowLeft') {
+                    e.preventDefault();
+                    rewindAction();
+                } else if (e.key === 's' || e.key === 'S') {
+                    e.preventDefault();
+                    stopPlay();
+                }
+            });
+
+            // Resize listener
+            window.addEventListener('resize', handleResize);
+
+            // ---- Initial render ----
+            function initialRender() {
+                const defaultNums = generateNumbersWithDisorder(0, 999, 100, 50, 50);
+                numbersInput.value = defaultNums.join(' ');
+                state.numbers = defaultNums;
+                state.stackA = defaultNums.slice();
+                state.stackB = [];
+                state.currentStep = 0;
+                state.isPlaying = false;
+                state.isPaused = false;
+                state.isFinished = false;
+                state.highlightA = new Set();
+                state.highlightB = new Set();
+                state.operations = [];
+                renderStacks([], []);
+                updateUIState();
+                updateBarSizeClass();
+            }
+
+            // ---- Enter key in number inputs ----
+            [minVal, maxVal, numCount, disorderPct].forEach(el => {
+                el.addEventListener('keydown', function(e) {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        generateAndLoad();
+                    }
+                });
+            });
+
+            // ---- Start ----
+            initialRender();
+
+            // Expose state for debugging (optional)
+            window.__pushswap = { state, renderStacks, resetStacks, stepForward, stepBackward };
+
+            document.querySelectorAll("textarea").forEach(textarea => {
+                textarea.addEventListener("click", function () {
+                    this.select();
+                });
+            });
+
+        })();
+    </script>
+
+</body>
+</html>
